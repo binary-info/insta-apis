@@ -1,10 +1,10 @@
 import os
 from pathlib import Path
-
+from instaloader import Instaloader, Post, Profile, TwoFactorAuthRequiredException
+from fastapi import HTTPException
 import instaloader
 import requests
 from fastapi import HTTPException, Depends
-from instaloader import Post
 
 from constants import INSTAGRAM_CLIENT_ID, INSTAGRAM_CLIENT_SECRET, INSTAGRAM_REDIRECT_URI, \
     INSTAGRAM_ACCESS_TOKEN_HEADER
@@ -28,8 +28,9 @@ def instagram_callback(code: str):
         "redirect_uri": INSTAGRAM_REDIRECT_URI,
         "code": code
     }
-
+    print("---------- Data -------------", data)
     response = requests.post("https://api.instagram.com/oauth/access_token", data=data)
+    print("-----Response -------------------------",response)
     response_data = response.json()
     access_token = response_data.get("access_token")
 
@@ -103,6 +104,7 @@ async def download_media(user_id: int, media_type: str, access_token: str = Depe
 
 def download_public_media(username: str, media_type: str):
     profile = instaloader.Profile.from_username(instaloader_obj.context, username)
+    print("----------------", profile)
 
     media_data = []
 
@@ -144,6 +146,7 @@ def download_public_media(username: str, media_type: str):
 
 def get_public_follower_count(username: str):
     profile = instaloader.Profile.from_username(instaloader_obj.context, username)
+    print("-----Profile Data ------", profile)
     return {
         "post_count": profile.mediacount,
         "followers_count": profile.followers,
@@ -151,38 +154,81 @@ def get_public_follower_count(username: str):
     }
 
 
-def download_all_media(url: str, media_type: str):
-    # Define valid media types
+def download_private_media(url: str, media_type: str, username: str, password: str, two_factor_code=None):
     valid_media_types = ["reel", "photos", "posts"]
-
-    # Validate media type
     media_type = media_type.lower()
+
     if media_type not in valid_media_types:
         raise HTTPException(status_code=400, detail=f"Invalid media type. Use one of {valid_media_types}.")
 
-    # Determine post ID and URL
-    if media_type in ["reel", "posts"]:
-        post_id = url.split('/')[4]
-        post = instaloader.Post.from_shortcode(instaloader_obj.context, post_id)
-        post_url = post.url if post.typename == 'GraphImage' else post.video_url
-    else:
-        username = url.split('/')[3].split("?")[0]
-        profile = instaloader.Profile.from_username(instaloader_obj.context, username)
-        post_url = profile.get_profile_pic_url()
-        post_id = username
+    instaloader_obj = Instaloader()
 
-    # Download media
-    response = requests.get(post_url, stream=True)
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail="Failed to download media.")
+    # Login to Instagram with Two-Factor Authentication handling
+    try:
+        instaloader_obj.login(username, password)
+    except TwoFactorAuthRequiredException as e:
+        if not two_factor_code:
+            raise HTTPException(status_code=401, detail="Two-factor authentication is required. Provide the code.")
+        try:
+            instaloader_obj.two_factor_login(two_factor_code)
+        except Exception as e:
+            raise HTTPException(status_code=401, detail=f"Two-factor authentication failed: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
 
-    file_extension = 'jpg' if media_type in ['photos', 'posts'] else 'mp4'
-    file_name = f'{post_id}.{file_extension}'
-    download_path = os.path.join(str(Path.home() / "Downloads"), file_name)
+    # Fetch the media URL
+    try:
+        if media_type in ["reel", "posts"]:
+            post_id = url.split('/')[4]
+            post = Post.from_shortcode(instaloader_obj.context, post_id)
+            post_url = post.url if post.typename == 'GraphImage' else post.video_url
+        else:
+            profile_username = url.split('/')[3].split("?")[0]
+            profile = Profile.from_username(instaloader_obj.context, profile_username)
+            post_url = profile.get_profile_pic_url()
+            post_id = profile_username
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Failed to fetch private data: {str(e)}")
 
-    with open(download_path, 'wb') as file:
-        for chunk in response.iter_content(chunk_size=1024):
-            if chunk:
-                file.write(chunk)
+    if not post_url:
+        raise HTTPException(status_code=404, detail="Media URL not found.")
 
-    return {"message": f"Media downloaded successfully in download folder."}
+    # Download the media
+    try:
+        response = requests.get(post_url, stream=True)
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code, detail="Failed to download media.")
+
+        file_extension = 'jpg' if media_type in ['photos', 'posts'] else 'mp4'
+        file_name = f'{post_id}.{file_extension}'
+        download_path = os.path.join(str(Path.home() / "Downloads"), file_name)
+
+        with open(download_path, 'wb') as file:
+            for chunk in response.iter_content(chunk_size=1024):
+                if chunk:
+                    file.write(chunk)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
+
+    return {"message": f"Media downloaded successfully to {download_path}."}
+
+def get_download_private_media(url: str, media_type: str, username: str, password: str, two_factor_code=None):
+    try:
+    # Call your function
+        download_private_media(
+            url=url,
+            media_type=media_type,
+            username=username,
+            password=password
+        )
+    except HTTPException as e:
+        if "Two-factor authentication is required" in str(e.detail):
+            two_factor_code = input("Enter the 2FA code sent to your device: ")
+            print(two_factor_code)
+            download_private_media(
+                url=url,
+                media_type=media_type,
+                username=username,
+                password=password,
+                two_factor_code=two_factor_code
+            )

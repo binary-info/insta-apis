@@ -1,6 +1,5 @@
 from fastapi import APIRouter
-from instagram.apis import get_instagram_followers_following, get_authorization_url, instagram_callback, get_user_info, \
-    download_media, download_public_media, get_public_follower_count, download_all_media
+from instagram.apis import *
 
 router = APIRouter(prefix="/api/v1", tags=['instagram'])
 
@@ -34,7 +33,7 @@ router.add_api_route(
 )
 
 router.add_api_route(
-    '/instagram/download_media/', download_all_media
+    '/instagram/download_media/',get_download_private_media #download_private_media  #download_all_media
 )
 
 
