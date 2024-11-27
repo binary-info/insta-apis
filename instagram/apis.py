@@ -201,8 +201,11 @@ def download_private_media(url: str, media_type: str):
 
         file_extension = 'jpg' if media_type in ['photos', 'posts'] else 'mp4'
         file_name = f'{post_id}.{file_extension}'
-        download_path = Path.home() / "Downloads", file_name
-
+        downloads_folder = Path.home() / "Downloads"
+        downloads_folder.mkdir(parents=True, exist_ok=True)
+        print(downloads_folder)
+        download_path = os.path.join(str(downloads_folder), file_name)
+        print("-------Path -------------------", download_path)
         with open(download_path, 'wb') as file:
             for chunk in response.iter_content(chunk_size=1024):
                 if chunk:
