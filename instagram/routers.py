@@ -33,7 +33,7 @@ router.add_api_route(
 )
 
 router.add_api_route(
-    '/instagram/download_media/', download_all_media #get_download_private_media download_private_media
+    '/instagram/download_media/', download_private_media #get_download_private_media download_private_media
 )
 
 
