@@ -5,6 +5,7 @@ from fastapi import HTTPException
 import instaloader
 import requests
 from fastapi import HTTPException, Depends
+from fastapi.responses import FileResponse
 
 from constants import INSTAGRAM_CLIENT_ID, INSTAGRAM_CLIENT_SECRET, INSTAGRAM_REDIRECT_URI, \
     INSTAGRAM_ACCESS_TOKEN_HEADER
@@ -201,10 +202,9 @@ def download_private_media(url: str, media_type: str):
 
         file_extension = 'jpg' if media_type in ['photos', 'posts'] else 'mp4'
         file_name = f'{post_id}.{file_extension}'
-        downloads_folder = Path.home() / "Downloads"
-        downloads_folder.mkdir(parents=True, exist_ok=True)
-        print(downloads_folder)
-        download_path = os.path.join(str(downloads_folder), file_name)
+        temp_folder = Path("temp_downloads")
+        temp_folder.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
+        download_path = temp_folder / file_name
         print("-------Path -------------------", download_path)
         with open(download_path, 'wb') as file:
             for chunk in response.iter_content(chunk_size=1024):
@@ -213,7 +213,11 @@ def download_private_media(url: str, media_type: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
 
-    return {"message": f"Media downloaded successfully to {download_path}."}
+    return FileResponse(
+        path=download_path,
+        media_type="application/octet-stream",
+        filename=file_name
+    )
 
 def get_download_private_media(url: str, media_type: str, username: str, password: str, two_factor_code=None):
     try:
