@@ -164,17 +164,17 @@ def download_private_media(url: str, media_type: str, username: str, password: s
     instaloader_obj = Instaloader()
 
     # Login to Instagram with Two-Factor Authentication handling
-    try:
-        instaloader_obj.login(username, password)
-    except TwoFactorAuthRequiredException as e:
-        if not two_factor_code:
-            raise HTTPException(status_code=401, detail="Two-factor authentication is required. Provide the code.")
-        try:
-            instaloader_obj.two_factor_login(two_factor_code)
-        except Exception as e:
-            raise HTTPException(status_code=401, detail=f"Two-factor authentication failed: {str(e)}")
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
+    # try:
+    #     instaloader_obj.login(username, password)
+    # except TwoFactorAuthRequiredException as e:
+    #     if not two_factor_code:
+    #         raise HTTPException(status_code=401, detail="Two-factor authentication is required. Provide the code.")
+    #     try:
+    #         instaloader_obj.two_factor_login(two_factor_code)
+    #     except Exception as e:
+    #         raise HTTPException(status_code=401, detail=f"Two-factor authentication failed: {str(e)}")
+    # except Exception as e:
+    #     raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
 
     # Fetch the media URL
     try:
@@ -212,23 +212,38 @@ def download_private_media(url: str, media_type: str, username: str, password: s
 
     return {"message": f"Media downloaded successfully to {download_path}."}
 
-def get_download_private_media(url: str, media_type: str, username: str, password: str, two_factor_code=None):
-    try:
-    # Call your function
-        download_private_media(
-            url=url,
-            media_type=media_type,
-            username=username,
-            password=password
-        )
-    except HTTPException as e:
-        if "Two-factor authentication is required" in str(e.detail):
-            two_factor_code = input("Enter the 2FA code sent to your device: ")
-            print(two_factor_code)
-            download_private_media(
-                url=url,
-                media_type=media_type,
-                username=username,
-                password=password,
-                two_factor_code=two_factor_code
-            )
+def download_all_media(url: str, media_type: str):
+    # Define valid media types
+    valid_media_types = ["reel", "photos", "posts"]
+
+    # Validate media type
+    media_type = media_type.lower()
+    if media_type not in valid_media_types:
+        raise HTTPException(status_code=400, detail=f"Invalid media type. Use one of {valid_media_types}.")
+
+    # Determine post ID and URL
+    if media_type in ["reel", "posts"]:
+        post_id = url.split('/')[4]
+        post = instaloader.Post.from_shortcode(instaloader_obj.context, post_id)
+        post_url = post.url if post.typename == 'GraphImage' else post.video_url
+    else:
+        username = url.split('/')[3].split("?")[0]
+        profile = instaloader.Profile.from_username(instaloader_obj.context, username)
+        post_url = profile.get_profile_pic_url()
+        post_id = username
+
+    # Download media
+    response = requests.get(post_url, stream=True)
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code, detail="Failed to download media.")
+
+    file_extension = 'jpg' if media_type in ['photos', 'posts'] else 'mp4'
+    file_name = f'{post_id}.{file_extension}'
+    download_path = os.path.join(str(Path.home() / "Downloads"), file_name)
+
+    with open(download_path, 'wb') as file:
+        for chunk in response.iter_content(chunk_size=1024):
+            if chunk:
+                file.write(chunk)
+
+    return {"message": f"Media downloaded successfully in download folder."}
