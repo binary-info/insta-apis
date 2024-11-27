@@ -241,7 +241,7 @@ def download_all_media(url: str, media_type: str):
     file_name = f'{post_id}.{file_extension}'
     download_path = os.path.join(str(Path.home() / "Downloads"), file_name)
 
-    with open(download_path, 'wb') as file:
+    with open(download_path, 'w') as file:
         for chunk in response.iter_content(chunk_size=1024):
             if chunk:
                 file.write(chunk)
