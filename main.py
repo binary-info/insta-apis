@@ -10,12 +10,12 @@ app = FastAPI(
 )
 
 app.include_router(instagram_router)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
-@app.get("/")
-async def read_root():
-    return FileResponse("static/index.html")
+# @app.get("/")
+# async def read_root():
+#     return FileResponse("static/index.html")
 
 
 @app.get("/", include_in_schema=False)
