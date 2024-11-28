@@ -179,7 +179,7 @@ def download_private_media(url: str, media_type: str):
 
     # Fetch the media URL
     try:
-        if media_type in ["reel", "posts"]:
+        if media_type in ["reel", "posts","photos"]:
             post_id = url.split('/')[4]
             post = Post.from_shortcode(instaloader_obj.context, post_id)
             post_url = post.url if post.typename == 'GraphImage' else post.video_url
@@ -192,6 +192,7 @@ def download_private_media(url: str, media_type: str):
         raise HTTPException(status_code=404, detail=f"Failed to fetch private data: {str(e)}")
 
     if not post_url:
+        print("------------------POST URL ---------------------", post_url)
         raise HTTPException(status_code=404, detail="Media URL not found.")
 
     # Download the media
@@ -205,12 +206,12 @@ def download_private_media(url: str, media_type: str):
         temp_folder = Path("temp_downloads")
         temp_folder.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
         download_path = temp_folder / file_name
-        print("-------Path -------------------", download_path)
         with open(download_path, 'wb') as file:
             for chunk in response.iter_content(chunk_size=1024):
                 if chunk:
                     file.write(chunk)
     except Exception as e:
+        print("exception as => ",e)
         raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
 
     return FileResponse(
