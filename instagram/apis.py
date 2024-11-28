@@ -28,10 +28,10 @@ def instagram_callback(code: str, client_id=INSTAGRAM_CLIENT_ID, redirect_link=I
     print("Client ID => ", client_id)
     secret_key = INSTAGRAM_CLIENT_SECRET
     data = {
-        "client_id": client_id,
-        "client_secret": secret_key,
+        "client_id": INSTAGRAM_CLIENT_ID,
+        "client_secret": INSTAGRAM_CLIENT_SECRET,
         "grant_type": "authorization_code",
-        "redirect_uri": redirect_link,
+        "redirect_uri": INSTAGRAM_REDIRECT_URI,
         "code": code
     }
     print("---------- Data -------------", data)
