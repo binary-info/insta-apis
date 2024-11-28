@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from instaloader import Instaloader, Post, Profile, TwoFactorAuthRequiredException
 from fastapi import HTTPException
@@ -6,9 +5,8 @@ import instaloader
 import requests
 from fastapi import HTTPException, Depends
 from fastapi.responses import FileResponse
+from constants import INSTAGRAM_CLIENT_ID, INSTAGRAM_CLIENT_SECRET, INSTAGRAM_REDIRECT_URI, INSTAGRAM_ACCESS_TOKEN_HEADER
 
-from constants import INSTAGRAM_CLIENT_ID, INSTAGRAM_CLIENT_SECRET, INSTAGRAM_REDIRECT_URI, \
-    INSTAGRAM_ACCESS_TOKEN_HEADER
 
 instaloader_obj = instaloader.Instaloader()
 
