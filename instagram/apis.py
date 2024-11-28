@@ -24,9 +24,12 @@ def get_authorization_url(client_id=INSTAGRAM_CLIENT_ID, redirect_link=INSTAGRAM
 
 def instagram_callback(code: str):
     # Exchange the authorization code for an access token
+    client_id = INSTAGRAM_CLIENT_ID
+    print("Client ID => ", client_id)
+    secret_key = INSTAGRAM_CLIENT_SECRET
     data = {
-        "client_id": INSTAGRAM_CLIENT_ID,
-        "client_secret": INSTAGRAM_CLIENT_SECRET,
+        "client_id": client_id,
+        "client_secret": secret_key,
         "grant_type": "authorization_code",
         "redirect_uri": INSTAGRAM_REDIRECT_URI,
         "code": code
