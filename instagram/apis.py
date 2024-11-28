@@ -14,7 +14,8 @@ instaloader_obj = instaloader.Instaloader()
 def get_authorization_url(client_id=INSTAGRAM_CLIENT_ID, redirect_link=INSTAGRAM_REDIRECT_URI):
     try:
         print(client_id)
-        authorization_url = f"https://api.instagram.com/oauth/authorize?client_id={client_id}&redirect_uri={redirect_link}&scope=user_profile,user_media&response_type=code"
+        # authorization_url = f"https://api.instagram.com/oauth/authorize?client_id={client_id}&redirect_uri={redirect_link}&scope=user_profile,user_media&response_type=code"
+        authorization_url = f"https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id={client_id}&redirect_uri=https://callbackhub.vercel.app/api/callback&response_type=code&scope=user_profile,user_media"
         return {
             "authorization_url": authorization_url
         }
