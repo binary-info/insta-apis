@@ -11,9 +11,10 @@ from constants import INSTAGRAM_CLIENT_ID, INSTAGRAM_CLIENT_SECRET, INSTAGRAM_RE
 instaloader_obj = instaloader.Instaloader()
 
 
-def get_authorization_url():
+def get_authorization_url(client_id=INSTAGRAM_CLIENT_ID, redirect_link=INSTAGRAM_REDIRECT_URI):
     try:
-        authorization_url = f"https://api.instagram.com/oauth/authorize?client_id='845956034038180'&redirect_uri={INSTAGRAM_REDIRECT_URI}&scope=user_profile,user_media&response_type={code}"
+        print(client_id)
+        authorization_url = f"https://api.instagram.com/oauth/authorize?client_id={client_id}&redirect_uri={redirect_link}&scope=user_profile,user_media&response_type=code"
         return {
             "authorization_url": authorization_url
         }
