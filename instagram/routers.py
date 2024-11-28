@@ -11,9 +11,9 @@ router.add_api_route(
     '/instagram/callback/', instagram_callback
 )
 
-router.add_api_route(
-    '/instagram/user/info', get_user_info
-)
+# router.add_api_route(
+#     '/instagram/user/info', get_user_info
+# )
 
 router.add_api_route(
     '/instagram/user/relationships/', get_instagram_followers_following

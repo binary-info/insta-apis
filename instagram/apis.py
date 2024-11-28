@@ -10,23 +10,15 @@ from constants import INSTAGRAM_CLIENT_ID, INSTAGRAM_CLIENT_SECRET, INSTAGRAM_RE
 
 instaloader_obj = instaloader.Instaloader()
 
+def get_authorization_url():
+    authorization_url = f"https://api.instagram.com/oauth/authorize?client_id={INSTAGRAM_CLIENT_ID}&redirect_uri={INSTAGRAM_REDIRECT_URI}&scope=user_profile,user_media&response_type=code"
+    return {
+        "authorization_url": authorization_url
+    }
 
-def get_authorization_url(client_id=INSTAGRAM_CLIENT_ID, redirect_link=INSTAGRAM_REDIRECT_URI):
-    try:
-        print(client_id)
-        # authorization_url = f"https://api.instagram.com/oauth/authorize?client_id={client_id}&redirect_uri={redirect_link}&scope=user_profile,user_media&response_type=code"
-        authorization_url = f"https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id={client_id}&redirect_uri=https://callbackhub.vercel.app/api/callback&response_type=code&scope=user_profile,user_media"
-        return {
-            "authorization_url": authorization_url
-        }
-    except Exception as e:
-        return {"error":e}
 
-def instagram_callback(code: str, client_id=INSTAGRAM_CLIENT_ID, redirect_link=INSTAGRAM_REDIRECT_URI):
+def instagram_callback(code: str):
     # Exchange the authorization code for an access token
-    client_id = INSTAGRAM_CLIENT_ID
-    print("Client ID => ", client_id)
-    secret_key = INSTAGRAM_CLIENT_SECRET
     data = {
         "client_id": INSTAGRAM_CLIENT_ID,
         "client_secret": INSTAGRAM_CLIENT_SECRET,
@@ -34,9 +26,8 @@ def instagram_callback(code: str, client_id=INSTAGRAM_CLIENT_ID, redirect_link=I
         "redirect_uri": INSTAGRAM_REDIRECT_URI,
         "code": code
     }
-    print("---------- Data -------------", data)
+
     response = requests.post("https://api.instagram.com/oauth/access_token", data=data)
-    print("-----Response -------------------------",response)
     response_data = response.json()
     access_token = response_data.get("access_token")
 
@@ -46,15 +37,50 @@ def instagram_callback(code: str, client_id=INSTAGRAM_CLIENT_ID, redirect_link=I
     return {"access_token": access_token}
 
 
-def get_user_info(access_token: str = Depends(INSTAGRAM_ACCESS_TOKEN_HEADER)):
-    response = requests.get(
-        f"https://graph.instagram.com/me?fields=id,username,profile_picture_url&access_token={access_token}")
-    user_info = response.json()
+# def get_authorization_url(client_id=INSTAGRAM_CLIENT_ID, redirect_link=INSTAGRAM_REDIRECT_URI):
+#     try:
+#         print(client_id)
+#         # authorization_url = f"https://api.instagram.com/oauth/authorize?client_id={client_id}&redirect_uri={redirect_link}&scope=user_profile,user_media&response_type=code"
+#         authorization_url = f"https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id={client_id}&redirect_uri={redirect_link}&response_type=code&scope=user_profile,user_media"
+#         return {
+#             "authorization_url": authorization_url
+#         }
+#     except Exception as e:
+#         return {"error":e}
 
-    if not user_info:
-        raise HTTPException(status_code=400, detail="Failed to obtain user instagram details")
+# def instagram_callback(code: str, client_id=INSTAGRAM_CLIENT_ID, redirect_link=INSTAGRAM_REDIRECT_URI):
+#     # Exchange the authorization code for an access token
+#     client_id = INSTAGRAM_CLIENT_ID
+#     print("Client ID => ", client_id)
+#     secret_key = INSTAGRAM_CLIENT_SECRET
+#     data = {
+#         "client_id": INSTAGRAM_CLIENT_ID,
+#         "client_secret": INSTAGRAM_CLIENT_SECRET,
+#         "grant_type": "authorization_code",
+#         "redirect_uri": INSTAGRAM_REDIRECT_URI,
+#         "code": code
+#     }
+#     print("---------- Data -------------", data)
+#     response = requests.post("https://api.instagram.com/oauth/access_token", data=data)
+#     print("-----Response -------------------------",response)
+#     response_data = response.json()
+#     access_token = response_data.get("access_token")
 
-    return user_info
+#     if not access_token:
+#         raise HTTPException(status_code=400, detail="Failed to obtain access token")
+
+#     return {"access_token": access_token}
+
+
+# def get_user_info(access_token: str = Depends(INSTAGRAM_ACCESS_TOKEN_HEADER)):
+#     response = requests.get(
+#         f"https://graph.instagram.com/me?fields=id,username,profile_picture_url&access_token={access_token}")
+#     user_info = response.json()
+
+#     if not user_info:
+#         raise HTTPException(status_code=400, detail="Failed to obtain user instagram details")
+
+#     return user_info
 
 
 def get_instagram_followers_following(user_id: int, access_token: str = Depends(INSTAGRAM_ACCESS_TOKEN_HEADER)):
