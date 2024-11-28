@@ -22,7 +22,7 @@ def get_authorization_url(client_id=INSTAGRAM_CLIENT_ID, redirect_link=INSTAGRAM
     except Exception as e:
         return {"error":e}
 
-def instagram_callback(code: str):
+def instagram_callback(code: str, client_id=INSTAGRAM_CLIENT_ID, redirect_link=INSTAGRAM_REDIRECT_URI):
     # Exchange the authorization code for an access token
     client_id = INSTAGRAM_CLIENT_ID
     print("Client ID => ", client_id)
@@ -31,7 +31,7 @@ def instagram_callback(code: str):
         "client_id": client_id,
         "client_secret": secret_key,
         "grant_type": "authorization_code",
-        "redirect_uri": INSTAGRAM_REDIRECT_URI,
+        "redirect_uri": redirect_link,
         "code": code
     }
     print("---------- Data -------------", data)
