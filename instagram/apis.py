@@ -12,11 +12,13 @@ instaloader_obj = instaloader.Instaloader()
 
 
 def get_authorization_url():
-    authorization_url = f"https://api.instagram.com/oauth/authorize?client_id=845956034038180&redirect_uri={INSTAGRAM_REDIRECT_URI}&scope=user_profile,user_media&response_type={code}"
-    return {
-        "authorization_url": authorization_url
-    }
-
+    try:
+        authorization_url = f"https://api.instagram.com/oauth/authorize?client_id='845956034038180'&redirect_uri={INSTAGRAM_REDIRECT_URI}&scope=user_profile,user_media&response_type={code}"
+        return {
+            "authorization_url": authorization_url
+        }
+    except Exception as e:
+        return {"error":e}
 
 def instagram_callback(code: str):
     # Exchange the authorization code for an access token
