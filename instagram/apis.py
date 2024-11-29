@@ -29,7 +29,8 @@ def instagram_callback(request: Request):
     code = request.query_params.get("code")
     if not code:
         return {"error": "Authorization failed"}
-    return {"message": "Authorization successful", "code": code}
+    else:
+        return {"message": "Authorization successful", "code": code}
 
 # def instagram_callback(code: str):
 #     # Exchange the authorization code for an access token
