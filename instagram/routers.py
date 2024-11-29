@@ -4,7 +4,7 @@ from instagram.apis import *
 router = APIRouter(prefix="/api/v1", tags=['instagram'])
 
 router.add_api_route(
-    '/instagram/get_instagram_auth_url/', get_authorization_url
+    '/instagram/get_instagram_auth_url', get_authorization_url
 )
 
 router.add_api_route(
