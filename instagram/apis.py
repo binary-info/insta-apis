@@ -32,31 +32,34 @@ def instagram_callback(request: Request):
     return {"message": "Authorization successful", "code": code}
 
 def generate_access_token(code: str):
-    CLIENT_ID = "my_client_id"
-    CLIENT_SECRET = "my_secret_id"
-    REDIRECT_URI = "https://instaapis-125d3323b5e6.herokuapp.com/api/v1/instagram/callback/"
-    AUTHORIZATION_CODE = code
-    # Exchange the authorization code for an access token
-    TOKEN_URL = "https://api.instagram.com/oauth/access_token"
-    payload = {
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
-        "grant_type": "authorization_code",
-        "redirect_uri": REDIRECT_URI,
-        "code": AUTHORIZATION_CODE
-    }
+    try:
+        CLIENT_ID = "3610376912555728"
+        CLIENT_SECRET = "30905d708e2d8f753b8d53146ceabc4a"
+        REDIRECT_URI = "https://instaapis-125d3323b5e6.herokuapp.com/api/v1/instagram/callback/"
+        TOKEN_URL = "https://api.instagram.com/oauth/access_token"
 
-    response = requests.post(TOKEN_URL, data=payload)
-    print("--- Response => ", response)
-    response_data = response.json()
-    access_token = response_data.get("access_token")
+        payload = {
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
+            "grant_type": "authorization_code",
+            "redirect_uri": REDIRECT_URI,
+            "code": code
+        }
 
-    if response.status_code == 200:
-        access_token_info = response.json()
-        print("Access Token:", access_token_info["access_token"])
-        return {"access_token":access_token_info['access_token']}
-    else:
-        print("Error:", response.json())
+        response = requests.post(TOKEN_URL, data=payload)
+
+        print("Response Status:", response.status_code)
+        print("Response Content:", response.text)
+
+        if response.status_code == 200:
+            access_token = response.json().get("access_token")
+            return {"access_token": access_token}
+        else:
+            return {"error": response.json()}
+
+    except Exception as e:
+        print("Exception Occurred:", str(e))
+        return {"error": "Server encountered an error"}
 
 
 # def get_authorization_url(client_id=INSTAGRAM_CLIENT_ID, redirect_link=INSTAGRAM_REDIRECT_URI):
