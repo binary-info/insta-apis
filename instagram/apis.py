@@ -5,10 +5,10 @@ import instaloader
 import requests
 from fastapi import HTTPException, Depends, Request
 from fastapi.responses import FileResponse
-from fastapi import APIRouter
+# from fastapi import APIRouter
 from constants import INSTAGRAM_CLIENT_ID, INSTAGRAM_CLIENT_SECRET, INSTAGRAM_REDIRECT_URI, INSTAGRAM_ACCESS_TOKEN_HEADER
 
-router = APIRouter(prefix="/api/v1", tags=['instagram'])
+# router = APIRouter(prefix="/api/v1", tags=['instagram'])
 
 instaloader_obj = instaloader.Instaloader()
 
@@ -24,7 +24,7 @@ def get_authorization_url():
         "authorization_url": authorization_url
     }
 
-@router.add_api_route('/instagram/callback/')
+# @router.add_api_route('/instagram/callback/')
 def instagram_callback(request: Request):
     code = request.query_params.get("code")
     if not code:
