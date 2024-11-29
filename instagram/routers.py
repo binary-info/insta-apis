@@ -7,9 +7,9 @@ router.add_api_route(
     '/instagram/get_instagram_auth_url', get_authorization_url
 )
 
-# router.add_api_route(
-#     '/instagram/callback/', instagram_callback
-# )
+router.add_api_route(
+    '/instagram/callback/', instagram_callback
+)
 
 # router.add_api_route(
 #     '/instagram/user/info', get_user_info
