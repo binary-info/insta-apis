@@ -42,6 +42,7 @@ def generate_access_token(code: str):
     }
 
     response = requests.post("https://api.instagram.com/oauth/access_token", data=data)
+    print("--- Response => ", response)
     response_data = response.json()
     access_token = response_data.get("access_token")
 
