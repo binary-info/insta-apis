@@ -59,8 +59,8 @@ def generate_access_token(code: str):
         print("Exception Occurred:", str(e))
         return {"error": "Server encountered an error"}
 
-
-def get_user_info(access_token: str = Depends(INSTAGRAM_ACCESS_TOKEN_HEADER)):
+# = Depends(INSTAGRAM_ACCESS_TOKEN_HEADER Change this according to old file
+def get_user_info(access_token: str):
     response = requests.get(
         f"https://graph.instagram.com/me?fields=id,username,profile_picture_url&access_token={access_token}")
     user_info = response.json()
