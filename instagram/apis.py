@@ -13,7 +13,7 @@ instaloader_obj = instaloader.Instaloader()
 INSTAGRAM_CLIENT_ID = INSTAGRAM_CLIENT_ID
 INSTAGRAM_CLIENT_SECRET = INSTAGRAM_CLIENT_SECRET
 INSTAGRAM_REDIRECT_URI = INSTAGRAM_REDIRECT_URI
-INSTAGRAM_API_VERSION = "v21.0"  # Adjust based on the API version you're using
+# INSTAGRAM_API_VERSION = "v21.0"  # Adjust based on the API version you're using
 INSTAGRAM_ACCESS_TOKEN_HEADER = INSTAGRAM_ACCESS_TOKEN_HEADER
 
 
@@ -90,51 +90,41 @@ def get_instagram_followers_following(user_id: int, access_token: str = Depends(
 
 
 
-async def download_media(user_id: int, media_type: str, access_token: str):
-    # Validate media_type
-    media_items = []
+async def download_media(user_id: str, media_type: str, access_token: str):
+    # Validate media type
     media_type = media_type.lower()
     if media_type not in ["reel", "stories", "photos", "posts"]:
         raise HTTPException(
             status_code=400, detail="Invalid media type. Use 'reel', 'stories', 'photos', or 'posts'."
         )
     
-    # Adjust media_type filtering
-    if media_type in ["photos", "posts"]:
-        target_type = "image"
-    elif media_type == "reel":
-        target_type = "video"
-    else:
-        target_type = media_type
+    # Adjust media_type for filtering
+    target_type = "IMAGE" if media_type in ["photos", "posts"] else "VIDEO"
 
-    # Fetch media items
-    url = f"https://graph.instagram.com/{INSTAGRAM_API_VERSION}/{user_id}/media"
+    # Base Instagram Graph API endpoint
+    url = f"https://graph.instagram.com/v16.0/{user_id}/media"
+    
+    # Request parameters
     params = {
         "access_token": access_token,
-        "fields": "id,media_type,media_url,thumbnail_url,permalink,caption,timestamp"
+        "fields": "id,media_type,media_url,thumbnail_url,permalink,timestamp"
     }
 
+    # Make the request
     response = requests.get(url, params=params)
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=response.json())
-    
+
+    # Parse the response
     media_data = response.json()
-    media_items.extend(media_data.get("data", []))
+    media_items = media_data.get("data", [])
 
-    # Handle pagination
-    next_page_token = media_data.get("paging", {}).get("next", "")
-    while next_page_token:
-        next_response = requests.get(next_page_token)
-        if next_response.status_code != 200:
-            raise HTTPException(status_code=next_response.status_code, detail=next_response.json())
-        
-        next_data = next_response.json()
-        media_items.extend(next_data.get("data", []))
-        next_page_token = next_data.get("paging", {}).get("next", "")
-
-    # Filter media items based on the requested type
-    filtered_media = [item for item in media_items if item.get("media_type").lower() == target_type]
-    print("Filtered data ---> ", filtered_media)
+    # Filter media by type
+    filtered_media = [
+        item for item in media_items
+        if item.get("media_type", "").upper() == target_type
+    ]
+    print(filtered_media)
 
     return filtered_media
 
