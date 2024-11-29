@@ -11,10 +11,6 @@ router.add_api_route(
 #     '/instagram/callback/', instagram_callback
 # )
 
-router.add_api_route(
-    '/generator_access_token/', generate_access_token
-)
-
 # router.add_api_route(
 #     '/instagram/user/info', get_user_info
 # )
