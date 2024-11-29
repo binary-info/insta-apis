@@ -5,16 +5,15 @@ import instaloader
 import requests
 from fastapi import HTTPException, Depends, Request
 from fastapi.responses import FileResponse
-# from fastapi import APIRouter
 from constants import INSTAGRAM_CLIENT_ID, INSTAGRAM_CLIENT_SECRET, INSTAGRAM_REDIRECT_URI, INSTAGRAM_ACCESS_TOKEN_HEADER
 
-# router = APIRouter(prefix="/api/v1", tags=['instagram'])
 
 instaloader_obj = instaloader.Instaloader()
 
 INSTAGRAM_CLIENT_ID = INSTAGRAM_CLIENT_ID
 INSTAGRAM_CLIENT_SECRET = INSTAGRAM_CLIENT_SECRET
 INSTAGRAM_REDIRECT_URI = INSTAGRAM_REDIRECT_URI
+INSTAGRAM_API_VERSION = "v21.0"  # Adjust based on the API version you're using
 INSTAGRAM_ACCESS_TOKEN_HEADER = INSTAGRAM_ACCESS_TOKEN_HEADER
 
 
@@ -24,7 +23,6 @@ def get_authorization_url():
         "authorization_url": authorization_url
     }
 
-# @router.add_api_route('/instagram/callback/')
 def instagram_callback(request: Request):
     code = request.query_params.get("code")
     if not code:
@@ -62,50 +60,15 @@ def generate_access_token(code: str):
         return {"error": "Server encountered an error"}
 
 
-# def get_authorization_url(client_id=INSTAGRAM_CLIENT_ID, redirect_link=INSTAGRAM_REDIRECT_URI):
-#     try:
-#         print(client_id)
-#         # authorization_url = f"https://api.instagram.com/oauth/authorize?client_id={client_id}&redirect_uri={redirect_link}&scope=user_profile,user_media&response_type=code"
-#         authorization_url = f"https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id={client_id}&redirect_uri={redirect_link}&response_type=code&scope=user_profile,user_media"
-#         return {
-#             "authorization_url": authorization_url
-#         }
-#     except Exception as e:
-#         return {"error":e}
+def get_user_info(access_token: str = Depends(INSTAGRAM_ACCESS_TOKEN_HEADER)):
+    response = requests.get(
+        f"https://graph.instagram.com/me?fields=id,username,profile_picture_url&access_token={access_token}")
+    user_info = response.json()
 
-# def instagram_callback(code: str, client_id=INSTAGRAM_CLIENT_ID, redirect_link=INSTAGRAM_REDIRECT_URI):
-#     # Exchange the authorization code for an access token
-#     client_id = INSTAGRAM_CLIENT_ID
-#     print("Client ID => ", client_id)
-#     secret_key = INSTAGRAM_CLIENT_SECRET
-#     data = {
-#         "client_id": INSTAGRAM_CLIENT_ID,
-#         "client_secret": INSTAGRAM_CLIENT_SECRET,
-#         "grant_type": "authorization_code",
-#         "redirect_uri": INSTAGRAM_REDIRECT_URI,
-#         "code": code
-#     }
-#     print("---------- Data -------------", data)
-#     response = requests.post("https://api.instagram.com/oauth/access_token", data=data)
-#     print("-----Response -------------------------",response)
-#     response_data = response.json()
-#     access_token = response_data.get("access_token")
+    if not user_info:
+        raise HTTPException(status_code=400, detail="Failed to obtain user instagram details")
 
-#     if not access_token:
-#         raise HTTPException(status_code=400, detail="Failed to obtain access token")
-
-#     return {"access_token": access_token}
-
-
-# def get_user_info(access_token: str = Depends(INSTAGRAM_ACCESS_TOKEN_HEADER)):
-#     response = requests.get(
-#         f"https://graph.instagram.com/me?fields=id,username,profile_picture_url&access_token={access_token}")
-#     user_info = response.json()
-
-#     if not user_info:
-#         raise HTTPException(status_code=400, detail="Failed to obtain user instagram details")
-
-#     return user_info
+    return user_info
 
 
 def get_instagram_followers_following(user_id: int, access_token: str = Depends(INSTAGRAM_ACCESS_TOKEN_HEADER)):
@@ -126,36 +89,53 @@ def get_instagram_followers_following(user_id: int, access_token: str = Depends(
     return {"followers": followers, "following": following}
 
 
-async def download_media(user_id: int, media_type: str, access_token: str = Depends(INSTAGRAM_ACCESS_TOKEN_HEADER)):
+
+async def download_media(user_id: int, media_type: str, access_token: str):
+    # Validate media_type
     media_items = []
     media_type = media_type.lower()
     if media_type not in ["reel", "stories", "photos", "posts"]:
-        raise HTTPException(status_code=400, detail="Invalid media type. Use 'reel', 'stories', 'photos', or 'posts'.")
-
+        raise HTTPException(
+            status_code=400, detail="Invalid media type. Use 'reel', 'stories', 'photos', or 'posts'."
+        )
+    
+    # Adjust media_type filtering
     if media_type in ["photos", "posts"]:
-        media_type = 'image'
+        target_type = "image"
+    elif media_type == "reel":
+        target_type = "video"
+    else:
+        target_type = media_type
 
-    media_response = requests.get(
-        f"https://graph.instagram.com/v21.0/{user_id}/media",
-        params={"access_token": access_token,
-                "fields": "id,media_type,media_url,thumbnail_url,permalink,caption,timestamp"}
-    )
+    # Fetch media items
+    url = f"https://graph.instagram.com/{INSTAGRAM_API_VERSION}/{user_id}/media"
+    params = {
+        "access_token": access_token,
+        "fields": "id,media_type,media_url,thumbnail_url,permalink,caption,timestamp"
+    }
 
-    if media_response.status_code != 200:
-        raise HTTPException(status_code=media_response.status_code, detail=media_response.json())
-
-    media_data = media_response.json()
+    response = requests.get(url, params=params)
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code, detail=response.json())
+    
+    media_data = response.json()
     media_items.extend(media_data.get("data", []))
 
-    # Pagination logic
-    next_page_token = media_data['paging'].get('next', '') if 'paging' in media_data else ''
+    # Handle pagination
+    next_page_token = media_data.get("paging", {}).get("next", "")
     while next_page_token:
-        response = requests.get(next_page_token)
-        data = response.json()
-        media_items.extend(data.get("data", []))
-        next_page_token = data['paging'].get('next', '') if 'paging' in data else ''
+        next_response = requests.get(next_page_token)
+        if next_response.status_code != 200:
+            raise HTTPException(status_code=next_response.status_code, detail=next_response.json())
+        
+        next_data = next_response.json()
+        media_items.extend(next_data.get("data", []))
+        next_page_token = next_data.get("paging", {}).get("next", "")
 
-    filtered_media = [item for item in media_items if item.get("media_type").lower() == media_type]
+    # Filter media items based on the requested type
+    filtered_media = [item for item in media_items if item.get("media_type").lower() == target_type]
+    print("Filtered data ---> ", filtered_media)
+
     return filtered_media
 
 
