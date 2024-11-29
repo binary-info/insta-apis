@@ -3,7 +3,7 @@ from instaloader import Instaloader, Post, Profile, TwoFactorAuthRequiredExcepti
 from fastapi import HTTPException
 import instaloader
 import requests
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException, Depends, Request
 from fastapi.responses import FileResponse
 from constants import INSTAGRAM_CLIENT_ID, INSTAGRAM_CLIENT_SECRET, INSTAGRAM_REDIRECT_URI, INSTAGRAM_ACCESS_TOKEN_HEADER
 
@@ -22,25 +22,31 @@ def get_authorization_url():
         "authorization_url": authorization_url
     }
 
+# @app.get("/instagram/callback")
+# def instagram_callback(request: Request):
+#     code = request.query_params.get("code")
+#     if not code:
+#         return {"error": "Authorization failed"}
+#     return {"message": "Authorization successful", "code": code}
 
-def instagram_callback(code: str):
-    # Exchange the authorization code for an access token
-    data = {
-        "client_id": INSTAGRAM_CLIENT_ID,
-        "client_secret": INSTAGRAM_CLIENT_SECRET,
-        "grant_type": "authorization_code",
-        "redirect_uri": INSTAGRAM_REDIRECT_URI,
-        "code": code
-    }
+# def instagram_callback(code: str):
+#     # Exchange the authorization code for an access token
+#     data = {
+#         "client_id": INSTAGRAM_CLIENT_ID,
+#         "client_secret": INSTAGRAM_CLIENT_SECRET,
+#         "grant_type": "authorization_code",
+#         "redirect_uri": INSTAGRAM_REDIRECT_URI,
+#         "code": code
+#     }
 
-    response = requests.post("https://api.instagram.com/oauth/access_token", data=data)
-    response_data = response.json()
-    access_token = response_data.get("access_token")
+#     response = requests.post("https://api.instagram.com/oauth/access_token", data=data)
+#     response_data = response.json()
+#     access_token = response_data.get("access_token")
 
-    if not access_token:
-        raise HTTPException(status_code=400, detail="Failed to obtain access token")
+#     if not access_token:
+#         raise HTTPException(status_code=400, detail="Failed to obtain access token")
 
-    return {"access_token": access_token}
+#     return {"access_token": access_token}
 
 
 # def get_authorization_url(client_id=INSTAGRAM_CLIENT_ID, redirect_link=INSTAGRAM_REDIRECT_URI):
