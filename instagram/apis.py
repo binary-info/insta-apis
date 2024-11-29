@@ -102,7 +102,7 @@ async def download_media(user_id: str, media_type: str, access_token: str):
     target_type = "IMAGE" if media_type in ["photos", "posts"] else "VIDEO"
 
     # Base Instagram Graph API endpoint
-    url = f"https://graph.instagram.com/v21.0/{user_id}/media"
+    # url = f"https://graph.instagram.com/{media-id}?fields"
     
     # Request parameters
     params = {
@@ -111,7 +111,7 @@ async def download_media(user_id: str, media_type: str, access_token: str):
     }
 
     # Make the request
-    response = requests.get(url, params=params)
+    response = requests.get(f"https://api.instagram.com/me/media?fields={params['fields']}&access_token={params['access_token']}")
     print(response)
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=response.json())
