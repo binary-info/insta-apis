@@ -32,24 +32,31 @@ def instagram_callback(request: Request):
     return {"message": "Authorization successful", "code": code}
 
 def generate_access_token(code: str):
+    CLIENT_ID = "my_client_id"
+    CLIENT_SECRET = "my_secret_id"
+    REDIRECT_URI = "https://instaapis-125d3323b5e6.herokuapp.com/api/v1/instagram/callback/"
+    AUTHORIZATION_CODE = code
     # Exchange the authorization code for an access token
-    data = {
-        "client_id": "3610376912555728",
-        "client_secret": INSTAGRAM_CLIENT_SECRET,
+    TOKEN_URL = "https://api.instagram.com/oauth/access_token"
+    payload = {
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
         "grant_type": "authorization_code",
-        "redirect_uri": INSTAGRAM_REDIRECT_URI,
-        "code": code
+        "redirect_uri": REDIRECT_URI,
+        "code": AUTHORIZATION_CODE
     }
 
-    response = requests.post("https://api.instagram.com/oauth/access_token", data=data)
+    response = requests.post(TOKEN_URL, data=payload)
     print("--- Response => ", response)
     response_data = response.json()
     access_token = response_data.get("access_token")
 
-    if not access_token:
-        raise HTTPException(status_code=400, detail="Failed to obtain access token")
-
-    return {"access_token": access_token}
+    if response.status_code == 200:
+        access_token_info = response.json()
+        print("Access Token:", access_token_info["access_token"])
+        return {"access_token":access_token_info['access_token']}
+    else:
+        print("Error:", response.json())
 
 
 # def get_authorization_url(client_id=INSTAGRAM_CLIENT_ID, redirect_link=INSTAGRAM_REDIRECT_URI):
