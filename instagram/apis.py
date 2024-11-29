@@ -19,7 +19,7 @@ INSTAGRAM_ACCESS_TOKEN_HEADER = INSTAGRAM_ACCESS_TOKEN_HEADER
 
 
 def get_authorization_url():
-    authorization_url = f"https://api.instagram.com/oauth/authorize?client_id=3610376912555728&redirect_uri={INSTAGRAM_REDIRECT_URI}&scope=user_profile,user_media&response_type=code"
+    authorization_url = f"https://api.instagram.com/oauth/authorize?client_id={INSTAGRAM_CLIENT_ID}&redirect_uri={INSTAGRAM_REDIRECT_URI}&scope=user_profile,user_media&response_type=code"
     return {
         "authorization_url": authorization_url
     }
@@ -29,8 +29,7 @@ def instagram_callback(request: Request):
     code = request.query_params.get("code")
     if not code:
         return {"error": "Authorization failed"}
-    else:
-        return {"message": "Authorization successful", "code": code}
+    return {"message": "Authorization successful", "code": code}
 
 # def instagram_callback(code: str):
 #     # Exchange the authorization code for an access token
