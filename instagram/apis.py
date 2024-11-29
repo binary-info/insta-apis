@@ -111,7 +111,7 @@ async def download_media(user_id: str, media_type: str, access_token: str):
     }
 
     # Make the request
-    response = requests.get(url, params=params)
+    response = requests.post(url, params=params)
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=response.json())
 
