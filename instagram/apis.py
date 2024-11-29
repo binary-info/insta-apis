@@ -25,11 +25,25 @@ def get_authorization_url():
     }
 
 # @router.add_api_route('/instagram/callback/')
-def instagram_callback(request: Request):
+def instagram_callback(request: Request, code: str):
     code = request.query_params.get("code")
     if not code:
         return {"error": "Authorization failed"}
-    return {"message": "Authorization successful", "code": code}
+    else:
+        data = {
+            "client_id": INSTAGRAM_CLIENT_ID,
+            "client_secret": INSTAGRAM_CLIENT_SECRET,
+            "grant_type": "authorization_code",
+            "redirect_uri": INSTAGRAM_REDIRECT_URI,
+            "code": code
+        }
+        response = requests.post("https://api.instagram.com/oauth/access_token", data=data)
+        response_data = response.json()
+        access_token = response_data.get("access_token")
+        if not access_token:
+            raise HTTPException(status_code=400, detail="Failed to obtain access token")
+        
+        return {"access_token": access_token}
 
 # def instagram_callback(code: str):
 #     # Exchange the authorization code for an access token
